@@ -1,3 +1,10 @@
+## [0.4.1](https://github.com/mrgoonie/zernio-cli/compare/v0.4.0...v0.4.1) (2026-06-14)
+
+
+### Bug Fixes
+
+* **skill:** expand zernio command coverage ([#4](https://github.com/mrgoonie/zernio-cli/issues/4)) ([84a066f](https://github.com/mrgoonie/zernio-cli/commit/84a066f5789274b7f1192f2392c9d578a8077153))
+
 # [0.4.0](https://github.com/mrgoonie/zernio-cli/compare/v0.3.0...v0.4.0) (2026-06-14)
 
 
