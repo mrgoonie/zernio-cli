@@ -1,6 +1,6 @@
 {
   "name": "zernio-cli",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Unofficial agent-friendly CLI for the Zernio API",
   "type": "module",
   "bin": {
