@@ -61,6 +61,17 @@ zernio posts:create \
   --media "https://public-url-from-upload" \
   --scheduledAt "2026-06-20T09:00:00Z"
 
+# Native X/Twitter quote, reply, and thread options
+zernio posts:create \
+  --text "Thread display title" \
+  --accounts <twitterAccountId> \
+  --threadJson '["tweet 1","tweet 2"]'
+
+zernio posts:create \
+  --text "my take" \
+  --accounts <twitterAccountId> \
+  --quoteTweetId "https://x.com/user/status/2061975910467698972"
+
 # Queue scheduling: let Zernio assign the slot
 zernio api:call createPost \
   --body-json '{"content":"Queued post","platforms":[{"platform":"twitter","accountId":"acc_123"}],"queuedFromProfile":"profile_123"}'
@@ -118,7 +129,8 @@ For media uploads, prefer `zernio media:upload`; it implements the official pres
 - Respect `Retry-After` and `X-RateLimit-*` headers.
 - Use `--request-id` or `--idempotency-key` for mutating calls that document safe retry headers.
 - Use pagination, caching, webhooks, and bulk endpoints for automation.
-- Use `platformSpecificData` for per-platform post settings.
+- Use `platformSpecificData` for per-platform post settings. `posts:create` wraps common X/Twitter fields with `--quoteTweetId`, `--replyToTweetId`, `--replySettings`, `--threadJson`, `--threadFile`, and `--platformSpecificData`.
+- For failed `posts:create` calls, use `--debug-safe` to print non-secret account/platform diagnostics.
 - Check current platform support at https://docs.zernio.com/platforms instead of relying on a fixed count.
 
 ## Development

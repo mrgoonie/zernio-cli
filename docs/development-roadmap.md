@@ -24,9 +24,10 @@ Status: Complete
 - Semantic-release stable/beta workflow.
 - NPM token based publish.
 
-## Phase 4 - Follow-Up
+## Phase 4 - Curated Command Follow-Up
 
-Status: Planned
+Status: In Progress
 
-- Enable GitHub Issues if `ck:vibe` issue tracking is required.
+- Enable GitHub Issues if `ck:vibe` issue tracking is required. Complete.
 - Add more curated commands for high-use endpoints discovered through real usage.
+- Add native X/Twitter `posts:create` support for quote, reply, threadItems, and safe publish diagnostics. Complete.

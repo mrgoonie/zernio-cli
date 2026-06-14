@@ -28,6 +28,7 @@
 ## Error Handling
 
 - Treat `401/403` as auth/scope issues; run `doctor --connection` and verify profile/account access.
+- For `posts:create` failures, rerun with `--debug-safe --pretty` to include non-secret platform/account context and recovery hints.
 - Treat `404` as wrong ID or missing scope; rediscover IDs with list/get commands.
 - Treat `409` as state conflict; refresh resource state before retrying.
 - Treat `422` as payload/schema issue; run `api:describe` and inspect request body.
@@ -64,6 +65,9 @@
 
 - Use `platforms:list` for identifiers; use `https://docs.zernio.com/platforms` as current capability source.
 - Use `platformSpecificData` in OpenAPI payloads for per-platform fields.
+- For X/Twitter, curated `posts:create` supports `--quoteTweetId`, `--replyToTweetId`, `--replySettings`, `--threadJson`, `--threadFile`, and `--platformSpecificData`.
+- For X/Twitter threads, top-level `--text` is only for Zernio display/search; include the root tweet in `threadItems[0]`.
+- Do not mix X-specific `posts:create` options with non-X accounts. Do not combine `quoteTweetId` with top-level `--media`, or `replyToTweetId` with `replySettings`.
 - Require title where platform needs it, especially YouTube, Reddit, Pinterest-style content.
 - Check media and character constraints before posting multi-platform content.
 - Do not assume platform support count is static; current CLI includes twitter, instagram, facebook, linkedin, tiktok, youtube, pinterest, reddit, bluesky, threads, googlebusiness, telegram, snapchat, whatsapp, discord.

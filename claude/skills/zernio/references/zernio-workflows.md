@@ -63,12 +63,54 @@ Draft:
 zernio posts:create --text "Draft copy" --accounts <accountId> --draft
 ```
 
+Native X/Twitter thread:
+
+```bash
+zernio posts:create \
+  --text "Thread display title" \
+  --accounts <twitterAccountId> \
+  --threadJson '["tweet 1","tweet 2","tweet 3"]'
+```
+
+Thread from file:
+
+```bash
+zernio posts:create \
+  --text "Thread display title" \
+  --accounts <twitterAccountId> \
+  --threadFile ./thread.txt
+```
+
+`thread.txt` can be a JSON array or plain text separated by lines containing only `---`. When thread items are present, `--text` is only for Zernio display/search; put the first published tweet in `threadItems[0]`.
+
+Native X/Twitter quote or reply:
+
+```bash
+zernio posts:create \
+  --text "my take" \
+  --accounts <twitterAccountId> \
+  --quoteTweetId "https://x.com/user/status/2061975910467698972"
+
+zernio posts:create \
+  --text "reply text" \
+  --accounts <twitterAccountId> \
+  --replyToTweetId "2061975910467698972"
+```
+
+Use `--platformSpecificData '{"replySettings":"following"}'` for advanced X passthrough. X-specific options require only `twitter`/`x` targets.
+
 Track/retry:
 
 ```bash
 zernio posts:list --status failed --limit 20 --pretty
 zernio posts:get <postId> --pretty
 zernio posts:retry <postId> --pretty
+```
+
+Debug failed post creation without exposing secrets:
+
+```bash
+zernio posts:create --text "Draft copy" --accounts <accountId> --draft --debug-safe --pretty
 ```
 
 ## Upload Media Then Post
