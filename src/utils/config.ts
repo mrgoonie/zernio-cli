@@ -1,6 +1,7 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
+import { config as loadDotenv } from 'dotenv';
 
 /**
  * Config stored at ~/.zernio/config.json.
@@ -13,11 +14,36 @@ export interface ZernioConfig {
   baseUrl?: string;
 }
 
+export interface ResolvedConfig {
+  config: ZernioConfig;
+  sources: {
+    apiKey?: string;
+    baseUrl?: string;
+  };
+}
+
 const CONFIG_DIR = join(homedir(), '.zernio');
 const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
 
 /** Legacy config path for backwards compatibility */
 const LEGACY_CONFIG_FILE = join(homedir(), '.late', 'config.json');
+
+let dotenvLoaded = false;
+
+function loadDotenvFiles(): void {
+  if (dotenvLoaded) return;
+  dotenvLoaded = true;
+
+  if (process.env.ZERNIO_CLI_LOAD_ENV !== '1') return;
+
+  const fileNames = process.env.ZERNIO_CLI_ENV_FILE
+    ? [process.env.ZERNIO_CLI_ENV_FILE]
+    : ['.env.local', `.env.${process.env.NODE_ENV || 'development'}`, '.env'];
+
+  for (const fileName of fileNames) {
+    if (existsSync(fileName)) loadDotenv({ path: fileName, override: false, quiet: true });
+  }
+}
 
 /** Read config from a JSON file. Returns empty object if file doesn't exist. */
 function readJsonConfig(filePath: string): ZernioConfig {
@@ -48,9 +74,12 @@ export function writeConfig(updates: Partial<ZernioConfig>): void {
   const merged = { ...existing, ...updates };
 
   if (!existsSync(CONFIG_DIR)) {
-    mkdirSync(CONFIG_DIR, { recursive: true });
+    mkdirSync(CONFIG_DIR, { recursive: true, mode: 0o700 });
+  } else {
+    chmodSync(CONFIG_DIR, 0o700);
   }
-  writeFileSync(CONFIG_FILE, JSON.stringify(merged, null, 2) + '\n', 'utf-8');
+  writeFileSync(CONFIG_FILE, JSON.stringify(merged, null, 2) + '\n', { encoding: 'utf-8', mode: 0o600 });
+  chmodSync(CONFIG_FILE, 0o600);
 }
 
 /**
@@ -58,12 +87,42 @@ export function writeConfig(updates: Partial<ZernioConfig>): void {
  * Priority: ZERNIO_* env var > LATE_* env var (legacy) > config file > default.
  */
 export function getConfig(): ZernioConfig {
+  return resolveConfig().config;
+}
+
+export function resolveConfig(): ResolvedConfig {
+  loadDotenvFiles();
   const file = readConfigFile();
+  const apiKey =
+    process.env.ZERNIO_API_KEY ||
+    process.env.LATE_API_KEY ||
+    file.apiKey;
+  const baseUrl =
+    process.env.ZERNIO_API_URL ||
+    process.env.LATE_API_URL ||
+    file.baseUrl;
 
   return {
-    apiKey: process.env.ZERNIO_API_KEY || process.env.LATE_API_KEY || file.apiKey,
-    // SDK default is https://zernio.com/api (it adds /v1/ prefix to paths internally)
-    baseUrl: process.env.ZERNIO_API_URL || process.env.LATE_API_URL || file.baseUrl,
+    config: {
+      apiKey,
+      baseUrl,
+    },
+    sources: {
+      apiKey: process.env.ZERNIO_API_KEY
+        ? 'env:ZERNIO_API_KEY'
+        : process.env.LATE_API_KEY
+          ? 'env:LATE_API_KEY'
+          : file.apiKey
+            ? 'config-file'
+            : undefined,
+      baseUrl: process.env.ZERNIO_API_URL
+        ? 'env:ZERNIO_API_URL'
+        : process.env.LATE_API_URL
+          ? 'env:LATE_API_URL'
+          : file.baseUrl
+            ? 'config-file'
+            : undefined,
+    },
   };
 }
 
@@ -72,6 +131,7 @@ export function requireApiKey(): string {
   const { apiKey } = getConfig();
   if (!apiKey) {
     console.error(JSON.stringify({
+      ok: false,
       error: true,
       message: 'No API key configured. Run "zernio auth:set" or set ZERNIO_API_KEY env var.',
     }));
