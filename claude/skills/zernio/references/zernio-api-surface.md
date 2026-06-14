@@ -1,6 +1,6 @@
 # Zernio Command Surface
 
-Current target: `zernio-cli` 0.4.0. JSON is default; add `--pretty` for humans.
+Current target: `zernio-cli` 0.4.1+. JSON is default; add `--pretty` for humans.
 
 ## Agent/system commands
 
@@ -35,7 +35,8 @@ Use profile/account IDs from these commands before posting, inbox, broadcasts, s
 
 | Use case | Commands |
 | --- | --- |
-| Create/publish/schedule/draft | `posts:create --text <text> --accounts <ids> [--scheduledAt --draft --media --title --tags --hashtags --timezone]` |
+| Create/publish/schedule/draft | `posts:create --text <text> --accounts <ids> [--scheduledAt --draft --media --title --tags --hashtags --timezone --debug-safe]` |
+| Native X/Twitter post options | `posts:create --accounts <twitterId> --text <display> [--quoteTweetId --replyToTweetId --replySettings --threadJson --threadFile --platformSpecificData]` |
 | Post lifecycle | `posts:list [--profileId --status --platform --from --to --page --limit]`, `posts:get <id>`, `posts:delete <id>`, `posts:retry <id>` |
 | Analytics | `analytics:posts [--profileId --platform --postId --source --from --to --sortBy --order --page --limit]`, `analytics:daily [--profileId --platform --from --to]`, `analytics:best-time [--profileId --platform]` |
 | Media upload | `media:upload <file>` |

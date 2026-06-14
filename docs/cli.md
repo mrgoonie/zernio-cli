@@ -88,6 +88,63 @@ zernio media:upload ./photo.jpg
 
 The command implements Zernio's two-step upload: presign, direct PUT, then return public URL. Use that URL in `posts:create` or `api:call createPost`.
 
+## Posts
+
+Generic post creation:
+
+```bash
+zernio posts:create --text "Hello" --accounts <accountId>
+zernio posts:create --text "Draft" --accounts <accountId> --draft
+zernio posts:create --text "Launch" --accounts <accountId> --scheduledAt "2026-06-20T09:00:00Z"
+```
+
+Native X/Twitter fields are available on `posts:create`:
+
+```bash
+zernio posts:create \
+  --text "Thread display title" \
+  --accounts <twitterAccountId> \
+  --threadJson '["tweet 1","tweet 2"]'
+
+zernio posts:create \
+  --text "Thread display title" \
+  --accounts <twitterAccountId> \
+  --threadFile ./thread.txt
+
+zernio posts:create \
+  --text "my take" \
+  --accounts <twitterAccountId> \
+  --quoteTweetId "https://x.com/user/status/2061975910467698972"
+
+zernio posts:create \
+  --text "reply text" \
+  --accounts <twitterAccountId> \
+  --replyToTweetId "2061975910467698972"
+```
+
+`--threadJson` accepts a JSON array of strings or objects. Object items can include `mediaItems`, so per-tweet media stays inside the relevant thread item. `--threadFile` accepts either a JSON array or plain text separated by lines containing only `---`.
+
+When `threadItems` are present, top-level `--text` is only for Zernio display/search. It is not published as the root tweet; include the root tweet as `threadItems[0]`.
+
+Advanced X/Twitter passthrough:
+
+```bash
+zernio posts:create \
+  --text "custom x data" \
+  --accounts <twitterAccountId> \
+  --platformSpecificData '{"replySettings":"following"}'
+```
+
+X/Twitter-specific options reject non-X targets. `quoteTweetId` cannot be combined with top-level `--media`, and `replyToTweetId` cannot be combined with `replySettings`.
+
+For safe diagnostics on publish failures:
+
+```bash
+zernio posts:create --text "Draft" --accounts <accountId> --draft --debug-safe --pretty
+```
+
+`--debug-safe` includes resolved platform/account context and recovery hints without printing API keys or social tokens.
+
 ## Queue Scheduling
 
 Use `queuedFromProfile` and optional `queueId` in create-post payloads. Do not use `queue/next-slot` as the scheduled time; it is preview-only.

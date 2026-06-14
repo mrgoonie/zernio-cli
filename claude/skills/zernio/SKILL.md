@@ -52,6 +52,8 @@ zernio accounts:list --pretty
 zernio accounts:health --pretty
 zernio media:upload ./photo.jpg --pretty
 zernio posts:create --text "Hello" --accounts <accountId>
+zernio posts:create --text "Thread title" --accounts <twitterAccountId> --threadFile ./thread.txt
+zernio posts:create --text "my take" --accounts <twitterAccountId> --quoteTweetId <tweetId-or-url>
 zernio inbox:conversations --platform instagram --pretty
 zernio contacts:list --search "john" --pretty
 zernio broadcasts:list --status draft --pretty
@@ -76,6 +78,8 @@ zernio api:call createPost --body-file ./post.json --request-id req_123 --pretty
 - Use `--request-id` or `--idempotency-key` for mutating endpoints that document safe retry headers.
 - For queue scheduling, let Zernio assign the slot with `queuedFromProfile` and optional `queueId`.
 - For media, use `media:upload`; it performs presign + direct PUT.
+- For native X/Twitter posts, use `posts:create --threadJson`, `--threadFile`, `--quoteTweetId`, `--replyToTweetId`, `--replySettings`, or `--platformSpecificData` before dropping down to raw `api:call`.
+- For confusing `posts:create` failures, retry with `--debug-safe --pretty` and report only the non-secret diagnostics.
 - For current platform details, consult https://docs.zernio.com/platforms instead of relying on a fixed count.
 
 ## References
