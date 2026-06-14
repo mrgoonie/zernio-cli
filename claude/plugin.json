@@ -1,0 +1,23 @@
+{
+  "name": "zernio-cli",
+  "description": "Unofficial Zernio CLI skill for social posting, media uploads, queue scheduling, and OpenAPI endpoint calls.",
+  "version": "0.3.0",
+  "author": "mrgoonie",
+  "license": "MIT",
+  "repository": "https://github.com/mrgoonie/zernio-cli",
+  "skills": [
+    {
+      "name": "zernio",
+      "path": "skills/zernio/SKILL.md",
+      "category": "dev-tools",
+      "keywords": [
+        "zernio",
+        "social-media",
+        "scheduling",
+        "api",
+        "cli",
+        "openapi"
+      ]
+    }
+  ]
+}

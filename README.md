@@ -1,148 +1,144 @@
-# Zernio CLI
+# zernio-cli
 
-Schedule posts, manage inbox, broadcasts, sequences, and automations across 14 platforms from the terminal.
+Unofficial, agent-friendly CLI for the Zernio API.
 
-Built for developers and AI agents. Outputs JSON by default.
+This package keeps the existing human workflow commands (`posts:create`, `media:upload`, `inbox:*`, etc.) and adds generated OpenAPI discovery plus a generic authenticated API caller for full API coverage.
+
+Official Zernio SDK/docs remain the source of truth:
+- API docs: https://docs.zernio.com/
+- OpenAPI: [docs/openapi/zernio-api-openapi.yaml](docs/openapi/zernio-api-openapi.yaml)
+- Node SDK: https://github.com/zernio-dev/zernio-node
 
 ## Install
 
 ```bash
-npm install -g @zernio/cli
+npm install -g zernio-cli
 ```
 
-## Quick Start
+The binary is `zernio`. A deprecated `late` alias remains for compatibility.
+
+## Auth
 
 ```bash
-# 1. Log in via browser (recommended)
+# Browser login for local interactive use
 zernio auth:login
 
-# Or set your API key manually (get one at https://zernio.com/dashboard/api-keys)
+# API key for CI/headless use
 zernio auth:set --key "sk_your-api-key"
 
-# 2. List your accounts
+# Or use env
+export ZERNIO_API_KEY="sk_your-api-key"
+
+# Verify without printing secrets
+zernio doctor --connection --pretty
+```
+
+Config resolution:
+1. One-off flags where supported, such as `--api-key` and `--base-url`
+2. `ZERNIO_API_KEY`, `ZERNIO_API_URL`
+3. `~/.zernio/config.json`
+4. Deprecated fallbacks: `LATE_*`, `~/.late/config.json`
+
+The published CLI does not auto-load `.env` from the current directory. For local repo testing, opt in explicitly:
+
+```bash
+ZERNIO_CLI_LOAD_ENV=1 zernio doctor --connection --pretty
+ZERNIO_CLI_LOAD_ENV=1 ZERNIO_CLI_ENV_FILE=.env npm test
+```
+
+## Common Workflows
+
+```bash
+# List profiles and accounts
+zernio profiles:list --pretty
 zernio accounts:list --pretty
 
-# 3. Schedule a post
-zernio posts:create --text "Hello from the CLI!" --accounts <accountId> --scheduledAt "2025-06-01T10:00:00Z"
+# Upload media, then use returned public URL in a post
+zernio media:upload ./photo.jpg --pretty
+zernio posts:create \
+  --text "Launch update" \
+  --accounts <accountId1>,<accountId2> \
+  --media "https://public-url-from-upload" \
+  --scheduledAt "2026-06-20T09:00:00Z"
+
+# Queue scheduling: let Zernio assign the slot
+zernio api:call createPost \
+  --body-json '{"content":"Queued post","platforms":[{"platform":"twitter","accountId":"acc_123"}],"queuedFromProfile":"profile_123"}'
 ```
 
-## Authentication
+Do not call `queue/next-slot` and feed that time back into `scheduledFor`; the docs define `next-slot` as preview-only.
 
-### Browser login (recommended)
+## Full API Coverage
+
+The CLI generates a compact endpoint catalog from the bundled OpenAPI spec.
 
 ```bash
-zernio auth:login
+# Search endpoints
+zernio api:catalog --tag Posts --search retry --pretty
+
+# Inspect parameters/request body shape
+zernio api:describe createPost --pretty
+zernio api:describe "GET /v1/posts" --pretty
+
+# Call any endpoint
+zernio api:call getPost --path postId=post_123 --pretty
+zernio api:call listPosts --query limit=10 --query page=1 --pretty
+zernio api:call createPost --body-file ./post.json --dry-run --pretty
+zernio api:call createPost --body-file ./post.json --request-id req_123 --pretty
+zernio api:call listPinterestBoardsForSelection --header X-Connect-Token=conn_123 --pretty
+zernio api:call uploadWhatsAppNumberKycDocument \
+  --header X-Filename=passport.pdf \
+  --content-type application/octet-stream \
+  --raw-body-file ./passport.pdf
 ```
 
-Opens your browser to authorize the CLI. An API key is created automatically and saved to `~/.zernio/config.json`. Running it again from the same device replaces the existing key.
+`api:call` returns:
 
-Options:
-- `--device-name <name>` - Custom device name for the API key label (defaults to your hostname)
+```json
+{
+  "ok": true,
+  "status": 200,
+  "statusText": "OK",
+  "rateLimit": {
+    "limit": "600",
+    "remaining": "599",
+    "reset": "1760000000",
+    "retryAfter": null
+  },
+  "data": {}
+}
+```
 
-### Manual API key
+For media uploads, prefer `zernio media:upload`; it implements the official presign + direct PUT workflow.
+
+## Reliability Rules
+
+- JSON is default; use `--pretty` for readable JSON.
+- Branch automation on error `type` and `code` when the API returns them, not message text.
+- Respect `Retry-After` and `X-RateLimit-*` headers.
+- Use `--request-id` or `--idempotency-key` for mutating calls that document safe retry headers.
+- Use pagination, caching, webhooks, and bulk endpoints for automation.
+- Use `platformSpecificData` for per-platform post settings.
+- Check current platform support at https://docs.zernio.com/platforms instead of relying on a fixed count.
+
+## Development
 
 ```bash
-zernio auth:set --key "sk_your-api-key"
+npm ci
+npm run generate:openapi
+npm run build
+npm test
+npm run test:coverage
+npm audit --omit=optional
+
+# Optional live connection test using repo .env
+ZERNIO_CLI_LOAD_ENV=1 node dist/index.js doctor --connection --pretty
 ```
 
-### Verify
-
-```bash
-zernio auth:check
-```
-
-## Commands
-
-| Command | Description |
-|---------|-------------|
-| `zernio auth:login` | Log in via browser |
-| `zernio auth:set --key <key>` | Save API key manually |
-| `zernio auth:check` | Verify API key |
-| `zernio profiles:list` | List profiles |
-| `zernio profiles:create --name <name>` | Create profile |
-| `zernio profiles:get <id>` | Get profile |
-| `zernio profiles:update <id>` | Update profile |
-| `zernio profiles:delete <id>` | Delete profile |
-| `zernio accounts:list` | List social accounts |
-| `zernio accounts:get <id>` | Get account details |
-| `zernio accounts:health` | Check account health |
-| `zernio posts:create` | Create/schedule a post |
-| `zernio posts:list` | List posts |
-| `zernio posts:get <id>` | Get post details |
-| `zernio posts:delete <id>` | Delete a post |
-| `zernio posts:retry <id>` | Retry failed post |
-| `zernio analytics:posts` | Post analytics |
-| `zernio analytics:daily` | Daily metrics |
-| `zernio analytics:best-time` | Best posting times |
-| `zernio media:upload <file>` | Upload media file |
-| **Inbox** | |
-| `zernio inbox:conversations` | List DM conversations |
-| `zernio inbox:conversation <id>` | Get conversation details |
-| `zernio inbox:messages <id>` | Get messages in conversation |
-| `zernio inbox:send <id>` | Send a DM |
-| `zernio inbox:comments` | List post comments |
-| `zernio inbox:post-comments <id>` | Get comments on a post |
-| `zernio inbox:reply <postId>` | Reply to a comment |
-| `zernio inbox:reviews` | List reviews |
-| `zernio inbox:review-reply <id>` | Reply to a review |
-| **Contacts** | |
-| `zernio contacts:list` | List contacts |
-| `zernio contacts:create` | Create a contact |
-| `zernio contacts:get <id>` | Get contact details |
-| `zernio contacts:update <id>` | Update a contact |
-| `zernio contacts:delete <id>` | Delete a contact |
-| `zernio contacts:channels <id>` | List contact channels |
-| `zernio contacts:set-field <id> <slug>` | Set custom field |
-| `zernio contacts:clear-field <id> <slug>` | Clear custom field |
-| `zernio contacts:bulk-create` | Bulk create from JSON |
-| **Broadcasts** | |
-| `zernio broadcasts:list` | List broadcasts |
-| `zernio broadcasts:create` | Create broadcast draft |
-| `zernio broadcasts:get <id>` | Get broadcast with stats |
-| `zernio broadcasts:update <id>` | Update broadcast |
-| `zernio broadcasts:delete <id>` | Delete broadcast |
-| `zernio broadcasts:send <id>` | Send immediately |
-| `zernio broadcasts:schedule <id>` | Schedule for later |
-| `zernio broadcasts:cancel <id>` | Cancel broadcast |
-| `zernio broadcasts:recipients <id>` | List recipients |
-| `zernio broadcasts:add-recipients <id>` | Add recipients |
-| **Sequences** | |
-| `zernio sequences:list` | List sequences |
-| `zernio sequences:create` | Create sequence |
-| `zernio sequences:get <id>` | Get sequence with steps |
-| `zernio sequences:update <id>` | Update sequence |
-| `zernio sequences:delete <id>` | Delete sequence |
-| `zernio sequences:activate <id>` | Activate sequence |
-| `zernio sequences:pause <id>` | Pause sequence |
-| `zernio sequences:enroll <id>` | Enroll contacts |
-| `zernio sequences:unenroll <id> <contactId>` | Unenroll contact |
-| `zernio sequences:enrollments <id>` | List enrollments |
-| **Automations** | |
-| `zernio automations:list` | List comment-to-DM automations |
-| `zernio automations:create` | Create automation |
-| `zernio automations:get <id>` | Get automation with logs |
-| `zernio automations:update <id>` | Update automation |
-| `zernio automations:delete <id>` | Delete automation |
-| `zernio automations:logs <id>` | List trigger logs |
-
-## Configuration
-
-Config is stored at `~/.zernio/config.json`. Environment variables take precedence:
-
-| Env Var | Description |
-|---------|-------------|
-| `ZERNIO_API_KEY` | API key (required) |
-| `ZERNIO_API_URL` | Custom API base URL |
-
-Legacy env vars `LATE_API_KEY` / `LATE_API_URL` and config at `~/.late/config.json` are still supported as fallbacks.
-
-## AI Agent Integration
-
-This CLI ships with a `SKILL.md` file for AI agent discovery (Claude Code, OpenClaw, etc.). AI agents can use the CLI to schedule posts, manage inbox conversations, send broadcasts, run drip sequences, and set up comment-to-DM automations programmatically.
-
-## Supported Platforms
-
-Instagram, TikTok, X (Twitter), LinkedIn, Facebook, Threads, YouTube, Bluesky, Pinterest, Reddit, Snapchat, Telegram, Google Business Profile.
+Release policy:
+- `main`: stable npm/GitHub release
+- `dev`: beta prerelease
+- semantic-release generates versions and changelog from conventional commits
 
 ## License
 
