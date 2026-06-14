@@ -76,6 +76,7 @@ export function requireApiKey(): string {
       message: 'No API key configured. Run "zernio auth:set" or set ZERNIO_API_KEY env var.',
     }));
     process.exit(1);
+    throw new Error('No API key configured.');
   }
   return apiKey;
 }

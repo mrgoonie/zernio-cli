@@ -24,6 +24,17 @@ zernio accounts:list --pretty
 
 # 3. Schedule a post
 zernio posts:create --text "Hello from the CLI!" --accounts <accountId> --scheduledAt "2025-06-01T10:00:00Z"
+
+# Native X/Twitter quote, reply, and thread options
+zernio posts:create \
+  --text "Thread display title" \
+  --accounts <twitterAccountId> \
+  --threadJson '["tweet 1","tweet 2"]'
+
+zernio posts:create \
+  --text "my take" \
+  --accounts <twitterAccountId> \
+  --quoteTweetId "https://x.com/user/status/2061975910467698972"
 ```
 
 ## Authentication
@@ -50,6 +61,31 @@ zernio auth:set --key "sk_your-api-key"
 ```bash
 zernio auth:check
 ```
+
+## X/Twitter Post Options
+
+`posts:create` supports native X/Twitter quote, reply, and thread fields through `platformSpecificData` on Twitter/X account targets.
+
+```bash
+zernio posts:create \
+  --text "Thread display title" \
+  --accounts <twitterAccountId> \
+  --threadJson '["tweet 1","tweet 2"]'
+
+zernio posts:create \
+  --text "reply text" \
+  --accounts <twitterAccountId> \
+  --replyToTweetId "2061975910467698972"
+
+zernio posts:create \
+  --text "my take" \
+  --accounts <twitterAccountId> \
+  --quoteTweetId "https://x.com/user/status/2061975910467698972"
+```
+
+Use `--threadFile ./thread.txt` for `---` separated thread text, or pass advanced X/Twitter fields with `--platformSpecificData '{"replySettings":"following"}'`. When `threadItems` is present, top-level `--text` is retained as the Zernio post content/display text while the thread items define the actual X/Twitter thread.
+
+For failed `posts:create` calls, add `--debug-safe` to print non-secret account/platform diagnostics.
 
 ## Commands
 

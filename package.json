@@ -16,6 +16,9 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "npm run typecheck",
     "prepublishOnly": "npm run build",
     "gen": "node scripts/generate-commands.mjs"
   },
@@ -51,6 +54,10 @@
     "@types/yargs": "^17.0.32",
     "tsup": "^8.0.1",
     "typescript": "^5.3.3",
+    "vitest": "^4.1.8",
     "yaml": "^2.9.0"
+  },
+  "overrides": {
+    "esbuild": "^0.28.1"
   }
 }

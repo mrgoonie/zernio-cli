@@ -13,9 +13,14 @@ export function output(data: unknown, pretty = false): void {
 }
 
 /** Print an error as structured JSON and exit with code 1. */
-export function outputError(message: string, status?: number): never {
-  const err: Record<string, unknown> = { error: true, message };
+export function outputError(
+  message: string,
+  status?: number,
+  extra: Record<string, unknown> = {},
+  pretty = false,
+): never {
+  const err: Record<string, unknown> = { ok: false, error: true, message, ...extra };
   if (status !== undefined) err.status = status;
-  console.error(JSON.stringify(err));
+  console.error(pretty ? JSON.stringify(err, null, 2) : JSON.stringify(err));
   process.exit(1);
 }

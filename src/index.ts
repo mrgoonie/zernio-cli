@@ -1,4 +1,5 @@
 import yargs from 'yargs';
+import type { Argv } from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { registerAuthCommands } from './commands/auth.js';
 import { registerProfileCommands } from './commands/profiles.js';
@@ -26,7 +27,7 @@ import { registerGeneratedCommands } from './commands/generated.js';
  * Outputs JSON by default (optimized for AI agents and piping).
  * Use --pretty for human-readable indented JSON.
  */
-let cli = yargs(hideBin(process.argv))
+let cli: Argv = yargs(hideBin(process.argv))
   .scriptName('zernio')
   .usage('Usage: zernio <command> [options]')
   .option('pretty', {
