@@ -13,3 +13,4 @@
 - Fixed `doctor --connection` so failed API checks exit non-zero for CI and scripts.
 - Added coverage-gated tests for critical agent CLI paths: `api:*`, `doctor`, `platforms`, config, request construction, parsing, output, and error handling.
 - Updated docs and skill guidance for media uploads, queue scheduling, errors, rate limits, and platforms.
+- Expanded the bundled `zernio` skill to cover all shipped curated commands, full OpenAPI fallback usage, and end-to-end agent workflows.
