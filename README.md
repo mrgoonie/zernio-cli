@@ -1,6 +1,6 @@
 # Zernio CLI
 
-Schedule posts, manage inbox, broadcasts, sequences, and automations across 14 platforms from the terminal.
+Schedule posts, manage inbox, broadcasts, sequences, and automations across 15 platforms from the terminal.
 
 Built for developers and AI agents. Outputs JSON by default.
 
