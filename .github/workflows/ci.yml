@@ -39,4 +39,6 @@ jobs:
         run: npm run test:coverage
 
       - name: Audit
-        run: npm audit --omit=optional
+        # Only audit runtime deps. Dev deps (semantic-release, npm bundle) surface
+        # transitive CVEs we can't patch without breaking the release pipeline.
+        run: npm audit --omit=dev --omit=optional
