@@ -18,6 +18,7 @@
   ],
   "scripts": {
     "generate:openapi": "node scripts/generate-openapi-catalog.mjs",
+    "generate:commands": "node scripts/generate-commands.mjs",
     "build": "npm run generate:openapi && tsc -p tsconfig.json && node scripts/add-cli-shebang.mjs",
     "dev": "tsx src/index.ts",
     "test": "npm run generate:openapi && vitest run",
@@ -60,7 +61,7 @@
     "url": "git+https://github.com/mrgoonie/zernio-cli.git"
   },
   "dependencies": {
-    "@zernio/node": "^0.2.261",
+    "@zernio/node": "^0.2.262",
     "dotenv": "^17.4.2",
     "open": "^11.0.0",
     "yargs": "^18.0.0"

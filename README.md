@@ -1,6 +1,6 @@
 # zernio-cli
 
-Unofficial, agent-friendly CLI for the Zernio API.
+Unofficial, agent-friendly CLI for the Zernio API. Schedule posts, manage inbox, broadcasts, sequences, and automations across 16 platforms from the terminal.
 
 This package keeps the existing human workflow commands (`posts:create`, `media:upload`, `inbox:*`, etc.) and adds generated OpenAPI discovery plus a generic authenticated API caller for full API coverage.
 
