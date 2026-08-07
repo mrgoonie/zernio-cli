@@ -18,6 +18,7 @@
   ],
   "scripts": {
     "generate:openapi": "node scripts/generate-openapi-catalog.mjs",
+    "generate:commands": "node scripts/generate-commands.mjs",
     "build": "npm run generate:openapi && tsc -p tsconfig.json && node scripts/add-cli-shebang.mjs",
     "dev": "tsx src/index.ts",
     "test": "npm run generate:openapi && vitest run",
