@@ -60,7 +60,7 @@
     "url": "git+https://github.com/mrgoonie/zernio-cli.git"
   },
   "dependencies": {
-    "@zernio/node": "^0.2.261",
+    "@zernio/node": "^0.2.262",
     "dotenv": "^17.4.2",
     "open": "^11.0.0",
     "yargs": "^18.0.0"

@@ -15,6 +15,14 @@ import { registerAutomationCommands } from './commands/automations.js';
 import { registerApiCommands } from './commands/api.js';
 import { registerDoctorCommand } from './commands/doctor.js';
 import { registerPlatformCommands } from './commands/platforms.js';
+import { registerCustomFieldCommands } from './commands/custom-fields.js';
+import { registerValidateCommands } from './commands/validate.js';
+import { registerAccountGroupCommands } from './commands/account-groups.js';
+import { registerApiKeyCommands } from './commands/api-keys.js';
+import { registerUsageCommands } from './commands/usage.js';
+import { registerLogsCommands } from './commands/logs.js';
+import { registerTrackingTagCommands } from './commands/tracking-tags.js';
+import { registerGeneratedCommands } from './commands/generated.js';
 
 /**
  * Zernio CLI - Schedule posts, manage inbox, broadcasts, sequences, and automations across 14 platforms.
@@ -59,6 +67,16 @@ cli = registerAutomationCommands(cli);
 cli = registerApiCommands(cli);
 cli = registerDoctorCommand(cli);
 cli = registerPlatformCommands(cli);
+cli = registerCustomFieldCommands(cli);
+cli = registerValidateCommands(cli);
+cli = registerAccountGroupCommands(cli);
+cli = registerApiKeyCommands(cli);
+cli = registerUsageCommands(cli);
+cli = registerLogsCommands(cli);
+cli = registerTrackingTagCommands(cli);
+// Auto-generated commands for every other API operation (see scripts/generate-commands.mjs).
+// Registered LAST so hand-written commands above take precedence on name collisions.
+cli = registerGeneratedCommands(cli);
 
 // Parse and execute
 cli.parse();
