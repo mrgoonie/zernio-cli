@@ -1,3 +1,10 @@
+# [0.8.0](https://github.com/mrgoonie/zernio-cli/compare/v0.7.0...v0.8.0) (2026-08-08)
+
+
+### Features
+
+* **posts:create:** infer .gif type + guard --platform-data X overlap ([#18](https://github.com/mrgoonie/zernio-cli/issues/18)) ([78839c7](https://github.com/mrgoonie/zernio-cli/commit/78839c759468f35cf949c62b7e6ecf87c32f8b39)), closes [#17](https://github.com/mrgoonie/zernio-cli/issues/17)
+
 # [0.7.0](https://github.com/mrgoonie/zernio-cli/compare/v0.6.0...v0.7.0) (2026-08-08)
 
 
