@@ -857,7 +857,10 @@ export function registerGeneratedCommands(yargs: Argv): Argv {
           .option('adAccountId', { type: 'string', describe: 'body param', demandOption: true })
           .option('name', { type: 'string', describe: 'body param', demandOption: true })
           .option('goal', { type: 'string', describe: 'body param', demandOption: true })
-          .option('budget', { type: 'string', describe: 'body param (JSON)', demandOption: true })
+          .option('adSetId', { type: 'string', describe: 'body param' })
+          .option('budget', { type: 'string', describe: 'body param (JSON)' })
+          .option('instagramAccountId', { type: 'string', describe: 'body param' })
+          .option('destinationType', { type: 'string', describe: 'body param' })
           .option('currency', { type: 'string', describe: 'body param' })
           .option('schedule', { type: 'string', describe: 'body param (JSON)' })
           .option('targeting', { type: 'string', describe: 'body param (JSON)' })
@@ -885,7 +888,10 @@ export function registerGeneratedCommands(yargs: Argv): Argv {
           if (argv['adAccountId'] !== undefined) body['adAccountId'] = argv['adAccountId'];
           if (argv['name'] !== undefined) body['name'] = argv['name'];
           if (argv['goal'] !== undefined) body['goal'] = argv['goal'];
+          if (argv['adSetId'] !== undefined) body['adSetId'] = argv['adSetId'];
           if (argv['budget'] !== undefined) body['budget'] = JSON.parse(String(argv['budget']));
+          if (argv['instagramAccountId'] !== undefined) body['instagramAccountId'] = argv['instagramAccountId'];
+          if (argv['destinationType'] !== undefined) body['destinationType'] = argv['destinationType'];
           if (argv['currency'] !== undefined) body['currency'] = argv['currency'];
           if (argv['schedule'] !== undefined) body['schedule'] = JSON.parse(String(argv['schedule']));
           if (argv['targeting'] !== undefined) body['targeting'] = JSON.parse(String(argv['targeting']));
@@ -1558,10 +1564,12 @@ export function registerGeneratedCommands(yargs: Argv): Argv {
       (y) =>
         y
           .positional('campaignId', { type: 'string', describe: 'campaignId', demandOption: true })
-          .option('accountId', { type: 'string', describe: 'body param' })
           .option('platform', { type: 'string', describe: 'body param', demandOption: true })
-          .option('budget', { type: 'string', describe: 'body param (JSON)' })
+          .option('accountId', { type: 'string', describe: 'body param' })
           .option('bidStrategy', { type: 'string', describe: 'body param (JSON)' })
+          .option('bidAmount', { type: 'number', describe: 'body param' })
+          .option('roasAverageFloor', { type: 'number', describe: 'body param' })
+          .option('budget', { type: 'string', describe: 'body param (JSON)' })
           .option('name', { type: 'string', describe: 'body param' })
           .option('platformSpecificData', { type: 'string', describe: 'body param (JSON)' }),
       async (argv) => {
@@ -1569,10 +1577,12 @@ export function registerGeneratedCommands(yargs: Argv): Argv {
           const late = createClient();
           const path = { campaignId: argv['campaignId'] };
           const body: Record<string, unknown> = {};
-          if (argv['accountId'] !== undefined) body['accountId'] = argv['accountId'];
           if (argv['platform'] !== undefined) body['platform'] = argv['platform'];
-          if (argv['budget'] !== undefined) body['budget'] = JSON.parse(String(argv['budget']));
+          if (argv['accountId'] !== undefined) body['accountId'] = argv['accountId'];
           if (argv['bidStrategy'] !== undefined) body['bidStrategy'] = JSON.parse(String(argv['bidStrategy']));
+          if (argv['bidAmount'] !== undefined) body['bidAmount'] = argv['bidAmount'];
+          if (argv['roasAverageFloor'] !== undefined) body['roasAverageFloor'] = argv['roasAverageFloor'];
+          if (argv['budget'] !== undefined) body['budget'] = JSON.parse(String(argv['budget']));
           if (argv['name'] !== undefined) body['name'] = argv['name'];
           if (argv['platformSpecificData'] !== undefined) body['platformSpecificData'] = JSON.parse(String(argv['platformSpecificData']));
           const { data } = await (late as any).adcampaigns.updateAdCampaign({ path, body: body as any });
@@ -5543,8 +5553,9 @@ export function registerGeneratedCommands(yargs: Argv): Argv {
           .option('imageUrl', { type: 'string', describe: 'body param' })
           .option('video', { type: 'string', describe: 'body param (JSON)' })
           .option('creatives', { type: 'string', describe: 'body param (JSON)' })
-          .option('budgetAmount', { type: 'number', describe: 'body param', demandOption: true })
-          .option('budgetType', { type: 'string', describe: 'body param', demandOption: true })
+          .option('adSetId', { type: 'string', describe: 'body param' })
+          .option('budgetAmount', { type: 'number', describe: 'body param' })
+          .option('budgetType', { type: 'string', describe: 'body param' })
           .option('currency', { type: 'string', describe: 'body param' })
           .option('endDate', { type: 'string', describe: 'body param' })
           .option('countries', { type: 'string', describe: 'body param (comma-separated)' })
@@ -5577,6 +5588,7 @@ export function registerGeneratedCommands(yargs: Argv): Argv {
           if (argv['imageUrl'] !== undefined) body['imageUrl'] = argv['imageUrl'];
           if (argv['video'] !== undefined) body['video'] = JSON.parse(String(argv['video']));
           if (argv['creatives'] !== undefined) body['creatives'] = JSON.parse(String(argv['creatives']));
+          if (argv['adSetId'] !== undefined) body['adSetId'] = argv['adSetId'];
           if (argv['budgetAmount'] !== undefined) body['budgetAmount'] = argv['budgetAmount'];
           if (argv['budgetType'] !== undefined) body['budgetType'] = argv['budgetType'];
           if (argv['currency'] !== undefined) body['currency'] = argv['currency'];

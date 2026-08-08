@@ -35,6 +35,16 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Verify generated commands are in sync
+        # Regenerate against the same source the maintainer uses locally
+        # (defaults to the public OpenAPI spec at zernio.com). Any diff means
+        # someone edited src/commands/generated.ts by hand or forgot to run
+        # `npm run gen` after an SDK/spec bump. Run the generator locally,
+        # commit the result, and push.
+        run: |
+          npm run generate:commands
+          git diff --exit-code src/commands/generated.ts
+
       - name: Test with coverage
         run: npm run test:coverage
 
