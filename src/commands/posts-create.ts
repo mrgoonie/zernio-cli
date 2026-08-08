@@ -2,15 +2,18 @@ import type { Argv } from 'yargs';
 import { createClient } from '../client.js';
 import { addAccountHealthDiagnostics, handlePostCreateError } from '../utils/posts-create-diagnostics.js';
 import {
+  applyGenericPlatformData,
   applyInstagramPlatformSpecificData,
   applyTwitterPlatformSpecificData,
   buildInstagramPlatformSpecificData,
-  buildMediaItems,
   buildTwitterPlatformSpecificData,
+  parsePlatformDataMap,
   PostsCreateValidationError,
   validateTwitterPlatformSpecificData,
+  type MediaItem,
   type PlatformTarget,
 } from '../utils/posts-create-platform-data.js';
+import { resolveMediaItems } from '../utils/posts-create-media.js';
 import { output, outputError } from '../utils/output.js';
 
 export function registerPostCreateCommand(yargs: Argv): Argv {
@@ -55,6 +58,16 @@ export function registerPostCreateCommand(yargs: Argv): Argv {
           describe: 'Instagram: mark the post as containing AI-generated media',
           default: false,
         })
+        .option('platform-data', {
+          type: 'string',
+          describe:
+            'JSON object keyed by platform (e.g. {"reddit":{...},"tiktok":{...}}) merged into each matching target',
+        })
+        .option('media-json', {
+          type: 'string',
+          describe:
+            'JSON array of media items (supports type gif/document, altText, title, thumbnail, instagramThumbnail); wins over --media',
+        })
         .option('debug-safe', {
           type: 'boolean',
           describe: 'Include non-secret post/account diagnostics when create fails',
@@ -86,7 +99,7 @@ export function registerPostCreateCommand(yargs: Argv): Argv {
           accountId: accountIds[index],
         }));
 
-        const mediaItems = buildMediaItems(argv.media);
+        const mediaItems = resolveMediaItems({ mediaCsv: argv.media, mediaJson: argv.mediaJson });
         const twitterData = buildTwitterPlatformSpecificData({
           quoteTweetId: argv.quoteTweetId,
           replyToTweetId: argv.replyToTweetId,
@@ -101,6 +114,8 @@ export function registerPostCreateCommand(yargs: Argv): Argv {
         platforms = applyTwitterPlatformSpecificData(platforms, twitterData);
         const instagramData = buildInstagramPlatformSpecificData({ aiGenerated: argv.aiGenerated });
         platforms = applyInstagramPlatformSpecificData(platforms, instagramData);
+        const platformDataMap = parsePlatformDataMap(argv.platformData);
+        platforms = applyGenericPlatformData(platforms, platformDataMap);
 
         if (argv.debugSafe) {
           selectedAccounts = await addAccountHealthDiagnostics(late as any, accountIds, selectedAccounts);
@@ -127,7 +142,7 @@ export function registerPostCreateCommand(yargs: Argv): Argv {
 function buildCreatePostBody(
   argv: Record<string, any>,
   platforms: PlatformTarget[],
-  mediaItems?: ReturnType<typeof buildMediaItems>,
+  mediaItems?: MediaItem[],
 ): Record<string, any> {
   const body: Record<string, any> = {
     content: argv.text,

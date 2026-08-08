@@ -3,7 +3,7 @@ import { PostsCreateValidationError } from './posts-create-validation-error.js';
 
 export { PostsCreateValidationError } from './posts-create-validation-error.js';
 
-export type MediaItem = { type: 'image' | 'video'; url: string; [key: string]: unknown };
+export type MediaItem = { type: 'image' | 'video' | 'gif' | 'document'; url: string; [key: string]: unknown };
 export type PlatformTarget = {
   platform: string;
   accountId: string;
@@ -147,6 +147,50 @@ export function applyTwitterPlatformSpecificData(
       ...result.data,
     },
   }));
+}
+
+/**
+ * Parse `--platform-data`: a JSON object keyed by platform name where each
+ * value is merged into that platform target's platformSpecificData. Covers
+ * platforms without a dedicated helper (reddit, tiktok, youtube, pinterest, …).
+ */
+export function parsePlatformDataMap(input?: unknown): Record<string, Record<string, unknown>> | undefined {
+  const raw = stringOption(input);
+  if (!raw) return undefined;
+  const parsed = parseJson(raw, '--platform-data');
+  if (!isRecord(parsed) || Array.isArray(parsed)) {
+    throw new PostsCreateValidationError('--platform-data must be a JSON object keyed by platform name.', 'INVALID_PLATFORM_DATA');
+  }
+  const map: Record<string, Record<string, unknown>> = {};
+  for (const [key, value] of Object.entries(parsed)) {
+    if (!isRecord(value) || Array.isArray(value)) {
+      throw new PostsCreateValidationError(
+        `--platform-data.${key} must be a JSON object.`,
+        'INVALID_PLATFORM_DATA_ENTRY',
+      );
+    }
+    map[key] = { ...(value as Record<string, unknown>) };
+  }
+  return map;
+}
+
+/** Merge `parsePlatformDataMap` output into matching platform targets. */
+export function applyGenericPlatformData(
+  platforms: PlatformTarget[],
+  platformDataMap?: Record<string, Record<string, unknown>>,
+): PlatformTarget[] {
+  if (!platformDataMap) return platforms;
+  return platforms.map((target) => {
+    const extra = platformDataMap[target.platform];
+    if (!extra) return target;
+    return {
+      ...target,
+      platformSpecificData: {
+        ...(target.platformSpecificData || {}),
+        ...extra,
+      },
+    };
+  });
 }
 
 function parsePlatformSpecificData(input?: unknown): Record<string, unknown> {
