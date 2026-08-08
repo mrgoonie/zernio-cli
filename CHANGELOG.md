@@ -1,3 +1,10 @@
+# [0.7.0](https://github.com/mrgoonie/zernio-cli/compare/v0.6.0...v0.7.0) (2026-08-08)
+
+
+### Features
+
+* **posts:create:** port upstream ergonomic flags (closes [#12](https://github.com/mrgoonie/zernio-cli/issues/12)) ([#15](https://github.com/mrgoonie/zernio-cli/issues/15)) ([4641208](https://github.com/mrgoonie/zernio-cli/commit/46412085b8f28287291e2abdf0febcbbc6ab419b))
+
 # [0.6.0](https://github.com/mrgoonie/zernio-cli/compare/v0.5.0...v0.6.0) (2026-08-07)
 
 
