@@ -7,6 +7,7 @@ import {
   applyTwitterPlatformSpecificData,
   buildInstagramPlatformSpecificData,
   buildTwitterPlatformSpecificData,
+  detectPlatformDataTwitterOverlap,
   parsePlatformDataMap,
   PostsCreateValidationError,
   validateTwitterPlatformSpecificData,
@@ -63,7 +64,15 @@ export function registerPostCreateCommand(yargs: Argv): Argv {
       platforms = applyTwitterPlatformSpecificData(platforms, twitterData);
       const instagramData = buildInstagramPlatformSpecificData({ aiGenerated: argv.aiGenerated });
       platforms = applyInstagramPlatformSpecificData(platforms, instagramData);
-      platforms = applyGenericPlatformData(platforms, parsePlatformDataMap(argv.platformData));
+      const platformDataMap = parsePlatformDataMap(argv.platformData);
+      const overlapFields = detectPlatformDataTwitterOverlap({ platformDataMap, twitterData });
+      if (overlapFields.length) {
+        outputWarning(
+          `Warning: --platform-data.twitter overrides X helper flag(s): ${overlapFields.join(', ')}. ` +
+            `Remove --platform-data.twitter/.x or the helper flag(s) to avoid ambiguity.`,
+        );
+      }
+      platforms = applyGenericPlatformData(platforms, platformDataMap);
 
       if (argv.debugSafe) {
         selectedAccounts = await addAccountHealthDiagnostics(late as any, accountIds, selectedAccounts);

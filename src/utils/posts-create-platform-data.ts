@@ -180,6 +180,34 @@ export function parsePlatformDataMap(input?: unknown): Record<string, Record<str
   return map;
 }
 
+/**
+ * Detect X/Twitter fields that would be shallow-overridden by
+ * `--platform-data.twitter` / `--platform-data.x` after the dedicated X
+ * helpers already populated them. Returns a sorted unique list of field
+ * names, or an empty array when there is no overlap (or no map).
+ *
+ * Callers use this to warn users that their `--quoteTweetId`,
+ * `--threadJson`, etc. intent will be silently replaced.
+ */
+export function detectPlatformDataTwitterOverlap(input: {
+  platformDataMap?: Record<string, Record<string, unknown>>;
+  twitterData: TwitterPlatformSpecificDataResult;
+}): string[] {
+  const { platformDataMap, twitterData } = input;
+  if (!platformDataMap || !twitterData.hasData || !twitterData.data) return [];
+  const helperKeys = Object.keys(twitterData.data);
+  if (!helperKeys.length) return [];
+  const overlapKeys = new Set<string>();
+  for (const bucketKey of ['twitter', 'x'] as const) {
+    const bucket = platformDataMap[bucketKey];
+    if (!bucket) continue;
+    for (const field of helperKeys) {
+      if (Object.prototype.hasOwnProperty.call(bucket, field)) overlapKeys.add(field);
+    }
+  }
+  return [...overlapKeys].sort();
+}
+
 /** Merge `parsePlatformDataMap` output into matching platform targets. */
 export function applyGenericPlatformData(
   platforms: PlatformTarget[],
