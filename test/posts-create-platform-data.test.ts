@@ -8,6 +8,7 @@ import {
   buildInstagramPlatformSpecificData,
   buildMediaItems,
   buildTwitterPlatformSpecificData,
+  detectPlatformDataTwitterOverlap,
   parsePlatformDataMap,
   validateTwitterPlatformSpecificData,
 } from '../src/utils/posts-create-platform-data.js';
@@ -205,6 +206,60 @@ describe('posts:create platform-specific data helpers', () => {
     it('leaves platforms untouched when the map is undefined', () => {
       const platforms = [{ platform: 'reddit', accountId: 'rd_1' }];
       expect(applyGenericPlatformData(platforms, undefined)).toBe(platforms);
+    });
+
+    describe('detectPlatformDataTwitterOverlap', () => {
+      it('reports helper fields overridden by --platform-data.twitter', () => {
+        const twitterData = buildTwitterPlatformSpecificData({
+          quoteTweetId: '1234',
+          paidPartnership: true,
+        });
+        const map = parsePlatformDataMap('{"twitter":{"quoteTweetId":"9999","otherField":"keep"}}');
+        expect(detectPlatformDataTwitterOverlap({ platformDataMap: map, twitterData })).toEqual([
+          'quoteTweetId',
+        ]);
+      });
+
+      it('detects overlap through the x alias key', () => {
+        const twitterData = buildTwitterPlatformSpecificData({ quoteTweetId: '1234' });
+        const map = parsePlatformDataMap('{"x":{"quoteTweetId":"9999"}}');
+        expect(detectPlatformDataTwitterOverlap({ platformDataMap: map, twitterData })).toEqual([
+          'quoteTweetId',
+        ]);
+      });
+
+      it('returns [] when platform-data.twitter fields do not collide with helpers', () => {
+        const twitterData = buildTwitterPlatformSpecificData({ quoteTweetId: '1234' });
+        const map = parsePlatformDataMap('{"twitter":{"conversationOwnersOnly":true}}');
+        expect(detectPlatformDataTwitterOverlap({ platformDataMap: map, twitterData })).toEqual([]);
+      });
+
+      it('returns [] when only helpers are set (no --platform-data)', () => {
+        const twitterData = buildTwitterPlatformSpecificData({ quoteTweetId: '1234' });
+        expect(
+          detectPlatformDataTwitterOverlap({ platformDataMap: undefined, twitterData }),
+        ).toEqual([]);
+      });
+
+      it('returns [] when only --platform-data.twitter is set (no helpers)', () => {
+        const twitterData = buildTwitterPlatformSpecificData({});
+        const map = parsePlatformDataMap('{"twitter":{"quoteTweetId":"9999"}}');
+        expect(detectPlatformDataTwitterOverlap({ platformDataMap: map, twitterData })).toEqual([]);
+      });
+
+      it('returns unique sorted list when helpers overlap on multiple fields via both aliases', () => {
+        const twitterData = buildTwitterPlatformSpecificData({
+          quoteTweetId: '1234',
+          replyToTweetId: '5678',
+        });
+        const map = parsePlatformDataMap(
+          '{"twitter":{"quoteTweetId":"9999"},"x":{"replyToTweetId":"1111","quoteTweetId":"7"}}',
+        );
+        expect(detectPlatformDataTwitterOverlap({ platformDataMap: map, twitterData })).toEqual([
+          'quoteTweetId',
+          'replyToTweetId',
+        ]);
+      });
     });
 
     it('normalizes x/twitter aliases so either spelling reaches both target names', () => {
