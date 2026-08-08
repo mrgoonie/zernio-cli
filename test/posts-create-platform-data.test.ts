@@ -206,5 +206,20 @@ describe('posts:create platform-specific data helpers', () => {
       const platforms = [{ platform: 'reddit', accountId: 'rd_1' }];
       expect(applyGenericPlatformData(platforms, undefined)).toBe(platforms);
     });
+
+    it('normalizes x/twitter aliases so either spelling reaches both target names', () => {
+      const map = parsePlatformDataMap('{"x":{"conversationOwnersOnly":true}}');
+      expect(map).toEqual({
+        x: { conversationOwnersOnly: true },
+        twitter: { conversationOwnersOnly: true },
+      });
+      const platforms = [
+        { platform: 'twitter', accountId: 'tw_1' },
+        { platform: 'x', accountId: 'x_1' },
+      ];
+      const result = applyGenericPlatformData(platforms, map);
+      expect(result[0].platformSpecificData).toEqual({ conversationOwnersOnly: true });
+      expect(result[1].platformSpecificData).toEqual({ conversationOwnersOnly: true });
+    });
   });
 });

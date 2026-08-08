@@ -170,6 +170,9 @@ export function parsePlatformDataMap(input?: unknown): Record<string, Record<str
       );
     }
     map[key] = { ...(value as Record<string, unknown>) };
+    // Normalize x/twitter aliases so either spelling lands on the actual platform key.
+    if (key === 'x' && !('twitter' in map)) map.twitter = map[key];
+    if (key === 'twitter' && !('x' in map)) map.x = map[key];
   }
   return map;
 }
