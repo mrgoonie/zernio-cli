@@ -3,7 +3,7 @@ import { PostsCreateValidationError } from './posts-create-validation-error.js';
 
 export { PostsCreateValidationError } from './posts-create-validation-error.js';
 
-export type MediaItem = { type: 'image' | 'video'; url: string; [key: string]: unknown };
+export type MediaItem = { type: 'image' | 'video' | 'gif' | 'document'; url: string; [key: string]: unknown };
 export type PlatformTarget = {
   platform: string;
   accountId: string;
@@ -22,6 +22,17 @@ type TwitterPlatformOptions = {
   threadJson?: unknown;
   threadFile?: unknown;
   platformSpecificData?: unknown;
+  paidPartnership?: unknown;
+  sensitiveMedia?: unknown;
+};
+
+type InstagramPlatformOptions = {
+  aiGenerated?: unknown;
+};
+
+export type InstagramPlatformSpecificDataResult = {
+  hasData: boolean;
+  data?: Record<string, unknown>;
 };
 
 const REPLY_SETTINGS = new Set(['following', 'mentionedUsers', 'subscribers', 'verified']);
@@ -56,7 +67,33 @@ export function buildTwitterPlatformSpecificData(options: TwitterPlatformOptions
   const threadItems = parseThreadItems(options.threadJson, options.threadFile);
   if (threadItems) data.threadItems = threadItems;
 
+  if (options.paidPartnership === true) data.paidPartnership = true;
+  if (options.sensitiveMedia === true) data.sensitiveMedia = { other: true };
+
   return Object.keys(data).length ? { hasData: true, data } : { hasData: false };
+}
+
+export function buildInstagramPlatformSpecificData(options: InstagramPlatformOptions): InstagramPlatformSpecificDataResult {
+  const data: Record<string, unknown> = {};
+  if (options.aiGenerated === true) data.isAiGenerated = true;
+  return Object.keys(data).length ? { hasData: true, data } : { hasData: false };
+}
+
+export function applyInstagramPlatformSpecificData(
+  platforms: PlatformTarget[],
+  result: InstagramPlatformSpecificDataResult,
+): PlatformTarget[] {
+  if (!result.hasData || !result.data) return platforms;
+  return platforms.map((target) => {
+    if (target.platform !== 'instagram') return target;
+    return {
+      ...target,
+      platformSpecificData: {
+        ...(target.platformSpecificData || {}),
+        ...result.data,
+      },
+    };
+  });
 }
 
 export function validateTwitterPlatformSpecificData(
@@ -110,6 +147,53 @@ export function applyTwitterPlatformSpecificData(
       ...result.data,
     },
   }));
+}
+
+/**
+ * Parse `--platform-data`: a JSON object keyed by platform name where each
+ * value is merged into that platform target's platformSpecificData. Covers
+ * platforms without a dedicated helper (reddit, tiktok, youtube, pinterest, …).
+ */
+export function parsePlatformDataMap(input?: unknown): Record<string, Record<string, unknown>> | undefined {
+  const raw = stringOption(input);
+  if (!raw) return undefined;
+  const parsed = parseJson(raw, '--platform-data');
+  if (!isRecord(parsed) || Array.isArray(parsed)) {
+    throw new PostsCreateValidationError('--platform-data must be a JSON object keyed by platform name.', 'INVALID_PLATFORM_DATA');
+  }
+  const map: Record<string, Record<string, unknown>> = {};
+  for (const [key, value] of Object.entries(parsed)) {
+    if (!isRecord(value) || Array.isArray(value)) {
+      throw new PostsCreateValidationError(
+        `--platform-data.${key} must be a JSON object.`,
+        'INVALID_PLATFORM_DATA_ENTRY',
+      );
+    }
+    map[key] = { ...(value as Record<string, unknown>) };
+    // Normalize x/twitter aliases so either spelling lands on the actual platform key.
+    if (key === 'x' && !('twitter' in map)) map.twitter = map[key];
+    if (key === 'twitter' && !('x' in map)) map.x = map[key];
+  }
+  return map;
+}
+
+/** Merge `parsePlatformDataMap` output into matching platform targets. */
+export function applyGenericPlatformData(
+  platforms: PlatformTarget[],
+  platformDataMap?: Record<string, Record<string, unknown>>,
+): PlatformTarget[] {
+  if (!platformDataMap) return platforms;
+  return platforms.map((target) => {
+    const extra = platformDataMap[target.platform];
+    if (!extra) return target;
+    return {
+      ...target,
+      platformSpecificData: {
+        ...(target.platformSpecificData || {}),
+        ...extra,
+      },
+    };
+  });
 }
 
 function parsePlatformSpecificData(input?: unknown): Record<string, unknown> {

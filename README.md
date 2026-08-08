@@ -72,9 +72,37 @@ zernio posts:create \
   --accounts <twitterAccountId> \
   --quoteTweetId "https://x.com/user/status/2061975910467698972"
 
-# Queue scheduling: let Zernio assign the slot
-zernio api:call createPost \
-  --body-json '{"content":"Queued post","platforms":[{"platform":"twitter","accountId":"acc_123"}],"queuedFromProfile":"profile_123"}'
+# Content disclosure labels (X + Instagram)
+zernio posts:create --text "sponsored" --accounts <xId> --paidPartnership --sensitiveMedia
+zernio posts:create --text "generated with AI" --accounts <igId> --aiGenerated
+
+# Generic passthrough for Reddit/TikTok/YouTube/Pinterest etc.
+zernio posts:create \
+  --text "cross-platform post" \
+  --accounts <redditId>,<tiktokId> \
+  --platform-data '{"reddit":{"subreddit":"programming"},"tiktok":{"privacy":"PUBLIC"}}'
+
+# Richer media (gif/document, altText, thumbnails) via --media-json
+zernio posts:create \
+  --text "with rich media" \
+  --accounts <accountId> \
+  --media-json '[{"type":"gif","url":"https://cdn.example/a.gif","altText":"demo"}]'
+
+# Queue scheduling (native flags)
+zernio posts:create \
+  --text "Queued post" \
+  --accounts <accountId> \
+  --queuedFromProfile <profileId> \
+  --queueId <queueId>
+
+# Recycling, crossposting, mentions, metadata
+zernio posts:create \
+  --text "recycled" \
+  --accounts <accountId> \
+  --recycling '{"enabled":true,"interval":"weekly","intervalCount":1}' \
+  --crosspostingEnabled \
+  --mentions '["@brand"]' \
+  --metadata '{"source":"cli"}'
 ```
 
 Do not call `queue/next-slot` and feed that time back into `scheduledFor`; the docs define `next-slot` as preview-only.
@@ -129,7 +157,8 @@ For media uploads, prefer `zernio media:upload`; it implements the official pres
 - Respect `Retry-After` and `X-RateLimit-*` headers.
 - Use `--request-id` or `--idempotency-key` for mutating calls that document safe retry headers.
 - Use pagination, caching, webhooks, and bulk endpoints for automation.
-- Use `platformSpecificData` for per-platform post settings. `posts:create` wraps common X/Twitter fields with `--quoteTweetId`, `--replyToTweetId`, `--replySettings`, `--threadJson`, `--threadFile`, and `--platformSpecificData`.
+- Use `platformSpecificData` for per-platform post settings. `posts:create` wraps common X/Twitter fields with `--quoteTweetId`, `--replyToTweetId`, `--replySettings`, `--threadJson` (alias: `--threadItems`), `--threadFile`, `--paidPartnership`, `--sensitiveMedia`, and `--platformSpecificData`; Instagram AI disclosure with `--aiGenerated`; and generic per-platform overrides via `--platform-data '{"reddit":{...}}'`. Use `--media-json` for richer media items (gif/document/altText/title/thumbnails) — wins over `--media` when both are set.
+- Flag precedence on `posts:create`: `--draft` wins over scheduling; then `--scheduledAt`; then `--queuedFromProfile` (server assigns the next slot); otherwise `publishNow` defaults to true. `--queueId` requires `--queuedFromProfile`. `--platform-data '{"twitter":{...}}'` is applied **after** the X-specific helpers and shallow-overrides overlapping keys; use `--platformSpecificData` if you want the X validators (quote/reply/thread conflicts) to see your custom fields. `--sensitiveMedia` needs attached media (`--media` or `--media-json`); the CLI warns to stderr if you set it text-only.
 - For failed `posts:create` calls, use `--debug-safe` to print non-secret account/platform diagnostics.
 - Check current platform support at https://docs.zernio.com/platforms instead of relying on a fixed count.
 
