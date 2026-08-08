@@ -69,4 +69,14 @@ describe('posts:create --media-json helper', () => {
     const items = resolveMediaItems({ mediaCsv: 'https://cdn.example/Loop.GIF' });
     expect(items).toEqual([{ type: 'gif', url: 'https://cdn.example/Loop.GIF' }]);
   });
+
+  it('ignores query strings and fragments when detecting extensions', () => {
+    const items = resolveMediaItems({
+      mediaCsv: 'https://cdn.example/loop.gif?X-Amz-Signature=abc,https://cdn.example/clip.mp4#t=5',
+    });
+    expect(items).toEqual([
+      { type: 'gif', url: 'https://cdn.example/loop.gif?X-Amz-Signature=abc' },
+      { type: 'video', url: 'https://cdn.example/clip.mp4#t=5' },
+    ]);
+  });
 });

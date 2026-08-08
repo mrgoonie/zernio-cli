@@ -68,7 +68,7 @@ export function registerPostCreateCommand(yargs: Argv): Argv {
       const overlapFields = detectPlatformDataTwitterOverlap({ platformDataMap, twitterData });
       if (overlapFields.length) {
         outputWarning(
-          `Warning: --platform-data.twitter overrides X helper flag(s): ${overlapFields.join(', ')}. ` +
+          `--platform-data.twitter overrides values set by X helper flags (field(s): ${overlapFields.join(', ')}). ` +
             `Remove --platform-data.twitter/.x or the helper flag(s) to avoid ambiguity.`,
         );
       }

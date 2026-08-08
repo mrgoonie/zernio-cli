@@ -1,5 +1,5 @@
 import { PostsCreateValidationError } from './posts-create-validation-error.js';
-import { buildMediaItems, type MediaItem } from './posts-create-platform-data.js';
+import { buildMediaItems, inferMediaTypeFromUrl, type MediaItem } from './posts-create-platform-data.js';
 
 /** Parse the `--media-json` flag: a JSON array of richer MediaItem objects. */
 export function parseMediaJson(input?: unknown): MediaItem[] | undefined {
@@ -47,12 +47,6 @@ function normalizeMediaItem(value: unknown, index: number): MediaItem {
       'INVALID_MEDIA_JSON_URL',
     );
   }
-  const type = typeof item.type === 'string' && item.type.trim() ? item.type.trim() : inferMediaType(url);
+  const type = typeof item.type === 'string' && item.type.trim() ? item.type.trim() : inferMediaTypeFromUrl(url);
   return { ...(item as MediaItem), type: type as MediaItem['type'], url };
-}
-
-function inferMediaType(url: string): MediaItem['type'] {
-  if (/\.gif$/i.test(url)) return 'gif';
-  if (/\.(mp4|mov|avi|webm|m4v)$/i.test(url)) return 'video';
-  return 'image';
 }

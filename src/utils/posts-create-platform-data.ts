@@ -43,9 +43,15 @@ export function buildMediaItems(media?: unknown): MediaItem[] | undefined {
   return urls.map((url) => ({ type: inferMediaTypeFromUrl(url), url }));
 }
 
-function inferMediaTypeFromUrl(url: string): MediaItem['type'] {
-  if (/\.gif$/i.test(url)) return 'gif';
-  if (/\.(mp4|mov|avi|webm|m4v)$/i.test(url)) return 'video';
+/**
+ * Infer a MediaItem type from a URL's file extension, ignoring query
+ * strings and fragments so signed CDN URLs (`?X-Amz-Signature=...`) match.
+ * Falls back to `'image'` for unknown extensions.
+ */
+export function inferMediaTypeFromUrl(url: string): MediaItem['type'] {
+  const path = url.split(/[?#]/, 1)[0] ?? url;
+  if (/\.gif$/i.test(path)) return 'gif';
+  if (/\.(mp4|mov|avi|webm|m4v)$/i.test(path)) return 'video';
   return 'image';
 }
 
