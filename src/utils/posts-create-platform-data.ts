@@ -22,6 +22,17 @@ type TwitterPlatformOptions = {
   threadJson?: unknown;
   threadFile?: unknown;
   platformSpecificData?: unknown;
+  paidPartnership?: unknown;
+  sensitiveMedia?: unknown;
+};
+
+type InstagramPlatformOptions = {
+  aiGenerated?: unknown;
+};
+
+export type InstagramPlatformSpecificDataResult = {
+  hasData: boolean;
+  data?: Record<string, unknown>;
 };
 
 const REPLY_SETTINGS = new Set(['following', 'mentionedUsers', 'subscribers', 'verified']);
@@ -56,7 +67,33 @@ export function buildTwitterPlatformSpecificData(options: TwitterPlatformOptions
   const threadItems = parseThreadItems(options.threadJson, options.threadFile);
   if (threadItems) data.threadItems = threadItems;
 
+  if (options.paidPartnership === true) data.paidPartnership = true;
+  if (options.sensitiveMedia === true) data.sensitiveMedia = { other: true };
+
   return Object.keys(data).length ? { hasData: true, data } : { hasData: false };
+}
+
+export function buildInstagramPlatformSpecificData(options: InstagramPlatformOptions): InstagramPlatformSpecificDataResult {
+  const data: Record<string, unknown> = {};
+  if (options.aiGenerated === true) data.isAiGenerated = true;
+  return Object.keys(data).length ? { hasData: true, data } : { hasData: false };
+}
+
+export function applyInstagramPlatformSpecificData(
+  platforms: PlatformTarget[],
+  result: InstagramPlatformSpecificDataResult,
+): PlatformTarget[] {
+  if (!result.hasData || !result.data) return platforms;
+  return platforms.map((target) => {
+    if (target.platform !== 'instagram') return target;
+    return {
+      ...target,
+      platformSpecificData: {
+        ...(target.platformSpecificData || {}),
+        ...result.data,
+      },
+    };
+  });
 }
 
 export function validateTwitterPlatformSpecificData(

@@ -3,6 +3,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  applyInstagramPlatformSpecificData,
+  buildInstagramPlatformSpecificData,
   buildMediaItems,
   buildTwitterPlatformSpecificData,
   validateTwitterPlatformSpecificData,
@@ -93,5 +95,59 @@ describe('posts:create platform-specific data helpers', () => {
         [{ type: 'image', url: 'https://cdn.example/a.png' }],
       ),
     ).toThrow('poll cannot be combined with --media');
+  });
+
+  describe('content-disclosure flags', () => {
+    it('sets paidPartnership when true', () => {
+      expect(buildTwitterPlatformSpecificData({ paidPartnership: true })).toEqual({
+        hasData: true,
+        data: { paidPartnership: true },
+      });
+    });
+
+    it('omits paidPartnership when false or absent', () => {
+      expect(buildTwitterPlatformSpecificData({ paidPartnership: false })).toEqual({ hasData: false });
+      expect(buildTwitterPlatformSpecificData({})).toEqual({ hasData: false });
+    });
+
+    it('maps sensitiveMedia flag to { other: true }', () => {
+      expect(buildTwitterPlatformSpecificData({ sensitiveMedia: true })).toEqual({
+        hasData: true,
+        data: { sensitiveMedia: { other: true } },
+      });
+    });
+
+    it('omits sensitiveMedia when false or absent', () => {
+      expect(buildTwitterPlatformSpecificData({ sensitiveMedia: false })).toEqual({ hasData: false });
+    });
+
+    it('builds Instagram isAiGenerated when aiGenerated=true', () => {
+      expect(buildInstagramPlatformSpecificData({ aiGenerated: true })).toEqual({
+        hasData: true,
+        data: { isAiGenerated: true },
+      });
+    });
+
+    it('returns no data when aiGenerated is false or absent', () => {
+      expect(buildInstagramPlatformSpecificData({ aiGenerated: false })).toEqual({ hasData: false });
+      expect(buildInstagramPlatformSpecificData({})).toEqual({ hasData: false });
+    });
+
+    it('applies Instagram data only to instagram targets', () => {
+      const platforms = [
+        { platform: 'instagram', accountId: 'ig_1' },
+        { platform: 'facebook', accountId: 'fb_1' },
+      ];
+      const result = applyInstagramPlatformSpecificData(platforms, { hasData: true, data: { isAiGenerated: true } });
+      expect(result).toEqual([
+        { platform: 'instagram', accountId: 'ig_1', platformSpecificData: { isAiGenerated: true } },
+        { platform: 'facebook', accountId: 'fb_1' },
+      ]);
+    });
+
+    it('leaves platforms untouched when Instagram result has no data', () => {
+      const platforms = [{ platform: 'instagram', accountId: 'ig_1' }];
+      expect(applyInstagramPlatformSpecificData(platforms, { hasData: false })).toBe(platforms);
+    });
   });
 });

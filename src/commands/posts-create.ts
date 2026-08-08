@@ -2,7 +2,9 @@ import type { Argv } from 'yargs';
 import { createClient } from '../client.js';
 import { addAccountHealthDiagnostics, handlePostCreateError } from '../utils/posts-create-diagnostics.js';
 import {
+  applyInstagramPlatformSpecificData,
   applyTwitterPlatformSpecificData,
+  buildInstagramPlatformSpecificData,
   buildMediaItems,
   buildTwitterPlatformSpecificData,
   PostsCreateValidationError,
@@ -37,6 +39,21 @@ export function registerPostCreateCommand(yargs: Argv): Argv {
         .option('platformSpecificData', {
           type: 'string',
           describe: 'Advanced platformSpecificData JSON object for X/Twitter targets',
+        })
+        .option('paidPartnership', {
+          type: 'boolean',
+          describe: 'X/Twitter: mark the post as a paid partnership',
+          default: false,
+        })
+        .option('sensitiveMedia', {
+          type: 'boolean',
+          describe: 'X/Twitter: flag attached media as sensitive (maps to sensitiveMedia.other)',
+          default: false,
+        })
+        .option('aiGenerated', {
+          type: 'boolean',
+          describe: 'Instagram: mark the post as containing AI-generated media',
+          default: false,
         })
         .option('debug-safe', {
           type: 'boolean',
@@ -77,9 +94,13 @@ export function registerPostCreateCommand(yargs: Argv): Argv {
           threadJson: argv.threadJson,
           threadFile: argv.threadFile,
           platformSpecificData: argv.platformSpecificData,
+          paidPartnership: argv.paidPartnership,
+          sensitiveMedia: argv.sensitiveMedia,
         });
         validateTwitterPlatformSpecificData(twitterData, platforms, mediaItems);
         platforms = applyTwitterPlatformSpecificData(platforms, twitterData);
+        const instagramData = buildInstagramPlatformSpecificData({ aiGenerated: argv.aiGenerated });
+        platforms = applyInstagramPlatformSpecificData(platforms, instagramData);
 
         if (argv.debugSafe) {
           selectedAccounts = await addAccountHealthDiagnostics(late as any, accountIds, selectedAccounts);
