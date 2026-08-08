@@ -52,5 +52,7 @@ function normalizeMediaItem(value: unknown, index: number): MediaItem {
 }
 
 function inferMediaType(url: string): MediaItem['type'] {
-  return /\.(mp4|mov|avi|webm|m4v)$/i.test(url) ? 'video' : 'image';
+  if (/\.gif$/i.test(url)) return 'gif';
+  if (/\.(mp4|mov|avi|webm|m4v)$/i.test(url)) return 'video';
+  return 'image';
 }

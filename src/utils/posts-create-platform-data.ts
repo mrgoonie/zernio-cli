@@ -40,10 +40,13 @@ const REPLY_SETTINGS = new Set(['following', 'mentionedUsers', 'subscribers', 'v
 export function buildMediaItems(media?: unknown): MediaItem[] | undefined {
   const urls = commaList(media);
   if (!urls.length) return undefined;
-  return urls.map((url) => ({
-    type: /\.(mp4|mov|avi|webm|m4v)$/i.test(url) ? 'video' : 'image',
-    url,
-  }));
+  return urls.map((url) => ({ type: inferMediaTypeFromUrl(url), url }));
+}
+
+function inferMediaTypeFromUrl(url: string): MediaItem['type'] {
+  if (/\.gif$/i.test(url)) return 'gif';
+  if (/\.(mp4|mov|avi|webm|m4v)$/i.test(url)) return 'video';
+  return 'image';
 }
 
 export function buildTwitterPlatformSpecificData(options: TwitterPlatformOptions): TwitterPlatformSpecificDataResult {

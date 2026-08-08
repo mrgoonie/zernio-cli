@@ -59,4 +59,14 @@ describe('posts:create --media-json helper', () => {
     const items = resolveMediaItems({ mediaCsv: 'https://cdn.example/a.png', mediaJson: '[]' });
     expect(items).toEqual([{ type: 'image', url: 'https://cdn.example/a.png' }]);
   });
+
+  it('infers gif type from .gif extension via --media-json when type omitted', () => {
+    const items = parseMediaJson('[{"url":"https://cdn.example/loop.gif"}]');
+    expect(items).toEqual([{ type: 'gif', url: 'https://cdn.example/loop.gif' }]);
+  });
+
+  it('infers gif type from uppercase .GIF via CSV --media', () => {
+    const items = resolveMediaItems({ mediaCsv: 'https://cdn.example/Loop.GIF' });
+    expect(items).toEqual([{ type: 'gif', url: 'https://cdn.example/Loop.GIF' }]);
+  });
 });
